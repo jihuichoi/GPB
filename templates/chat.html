@@ -35,7 +35,9 @@
         if (!window["WebSocket"]) {
             alert("Error: your browser does not support web sockets.");
         } else {
-            socket = new WebSocket("ws://localhost:8080/room");
+            // request.Host 값을 이용
+            socket = new WebSocket("ws://{{.Host}}/room");
+            // socket = new WebSocket("ws://localhost:8080/room");
             socket.onclose = function() {
                 alert("Connextion has been closed.");
             }
