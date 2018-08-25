@@ -1,7 +1,8 @@
-package chat
+package main
 
 import (
 	"github.com/gorilla/websocket"
+	"github.com/jihuichoi/GPB/trace"
 	"log"
 	"net/http"
 )
@@ -19,6 +20,9 @@ type room struct {
 
 	// clients holds all current clients in this room
 	clients map[*client]bool
+
+	// test 를 위한 tracer
+	tracer trace.Tracer
 }
 
 func (r *room) run() {
@@ -27,13 +31,18 @@ func (r *room) run() {
 		case client := <-r.join: // join 채널에 클라이언트가 들어오면
 			// joining
 			r.clients[client] = true
+			r.tracer.Trace("New Client joined")
 		case client := <-r.leave: // leave 채널에 클라이언트가 들어오면
 			// leaving
 			delete(r.clients, client)
+			close(client.send)
+			r.tracer.Trace("Client left")
 		case msg := <-r.forward: // forward 채널에 메세지가 들어오면
+			r.tracer.Trace("Message received: ", string(msg))
 			// forward message to all clients
 			for client := range r.clients {
 				client.send <- msg // 각 클라이언트의 send 채널로 메세지 전달
+				r.tracer.Trace(" -- sent to client")
 			}
 		}
 	}
@@ -71,5 +80,6 @@ func newRoom() *room {
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
+		tracer:  trace.Off(),
 	}
 }

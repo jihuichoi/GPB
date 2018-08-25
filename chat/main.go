@@ -1,4 +1,4 @@
-package chat
+package main
 
 import (
 	"flag"
@@ -34,12 +34,14 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	// 채팅 사이트 주소가 하드코딩됨 (localhost:8080)
-	// 이를 커맨드라인에서 -addr 라는 플래그로 처리하도록 변경 ./chat -addr=":3000" 이라는 형식으로 실행이 가능해짐
+	// 이를 커맨드라인에서 -addr 라는 플래그로 처리하도록 경 ./chat -addr=":3000" 이라는 형식으로 실행이 가능해짐
 	var addr = flag.String("addr", ":8080", "The addr of the application")
 	flag.Parse() // parse the flags
 
 	// newRoom 함수로 새 룸을 만든다.
 	r := newRoom()
+	// tracer 출력을 stdout 으로 내보냄
+	// r.tracer = trace.New(os.Stdout)
 
 	// net/http 기본 핸들러함수 사용
 	// 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
