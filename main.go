@@ -3,16 +3,16 @@ package main
 import (
 	"log"
 	"net/http"
+	"path/filepath"
 	"sync"
 	"text/template"
-	"path/filepath"
 )
 
 // templ represents a single template
 type templateHandler struct {
-	once sync.Once
+	once     sync.Once
 	filename string
-	templ *template.Template
+	templ    *template.Template
 }
 
 // ServeHTTP handles the HTTP request.
@@ -25,7 +25,7 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	// root
-	http.Handle("/", &templateHandler{filename:"chat.html"})
+	http.Handle("/", &templateHandler{filename: "chat.html"})
 
 	// start the web setver
 	if err := http.ListenAndServe(":8080", nil); err != nil {
