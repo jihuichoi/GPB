@@ -24,6 +24,7 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.next.ServeHTTP(w, r)
 }
 
+// 다음 핸들러를 위한 헬퍼 함수. 단순히 authoHanlder 를 wrapping 하는 역할
 func MustAuth(handler http.Handler) http.Handler {
 	return &authHandler{next: handler}
 }
