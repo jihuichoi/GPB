@@ -32,10 +32,12 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// bootstrap 등 static html 부분을 위한 항목
+	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./assets/"))))
 
 	// 채팅 사이트 주소가 하드코딩됨 (localhost:8080)
 	// 이를 커맨드라인에서 -addr 라는 플래그로 처리하도록 경 ./chat -addr=":3000" 이라는 형식으로 실행이 가능해짐
-	var addr = flag.String("addr", ":8080", "The addr of the application")
+	var addr = flag.String("host", ":8080", "The addr of the application")
 	flag.Parse() // parse the flags
 
 	// newRoom 함수로 새 룸을 만든다.
@@ -64,10 +66,13 @@ func main() {
 	// QST: 그러면 templateHandler 의 ServeHTTP 메서드가 동작하나? 왜?
 	// http.Handle 은 Handler 인터페이스를 사용하기 위한 함수. 즉, Handle 이 Handler 인터페이스를 만족하는 struct 를 인수값으로 받아서........
 	// 뭐래..
-	http.Handle("/", &templateHandler{filename: "chat.html"})
+	// http.Handle("/", &templateHandler{filename: "chat.html"})
 
-	// QST: 이 부분은 도대체 무엇을 하나?
-	http.Handle("/room", r)
+	// ch2: 주소를 chat 으로 바꾸고, 인증을 위해 MustAuth로 감싼다. 이러면 templateHanlder 는 인증이 되어야만 동작한다.
+	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"})) // MustAuth 를 통과하지 못하면, /login 으로 이동한다.
+	http.Handle("/login", &templateHandler{filename: "login.html"})
+	http.HandleFunc("/auth/", loginHandler)
+	http.Handle("/room", r) // QST: 이 부분은 도대체 무엇을 하나?
 
 	// get the room going
 	// 룸을 실행. 무한 루프를 돌면서 상에 따라 select 구문을 실행함
