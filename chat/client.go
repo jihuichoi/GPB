@@ -1,6 +1,9 @@
 package main
 
-import "github.com/gorilla/websocket"
+import (
+	"github.com/gorilla/websocket"
+	"time"
+)
 
 type client struct {
 	// socket is the web socket for this client
@@ -9,10 +12,16 @@ type client struct {
 	// send is a channel on which messages are sent
 	// 사용자가 받은 메세지. room 의 forward chan 에 메세지가 들어오면
 	// 각 사용자의 send chan 에 메세지 전달. 그러면 클라이언트 앱이 write 메서드를 통해 사용자의 화면에 글을 뿌림(write)
-	send chan []byte
+	// send chan []byte
+
+	// ch2: 사용자 정보도 함께 전달하기 위해 변경
+	send chan *message
 
 	// room is the room this client is chatting in
 	room *room
+
+	// userData holds information about the user
+	userData map[string]interface{}
 }
 
 // 유저의 행동으로서 read 가 아니라, 클라이언트 프로그램의 행동으로서 read
@@ -20,11 +29,21 @@ type client struct {
 func (c *client) read() {
 	defer c.socket.Close()
 	for {
-		_, msg, err := c.socket.ReadMessage()
+		// _, msg, err := c.socket.ReadMessage()
+		// if err != nil {
+		// 	return
+		// }
+		// c.room.forward <- msg // room 의 forward 채널로 읽은 msg 를 전달
+
+		// ch2: json 으로 변경
+		var msg *message
+		err := c.socket.ReadJSON(&msg)
 		if err != nil {
 			return
 		}
-		c.room.forward <- msg // room 의 forward 채널로 읽은 msg 를 전달
+		msg.When = time.Now()
+		msg.Name = c.userData["name"].(string)
+		c.room.forward <- msg
 	}
 }
 
@@ -34,7 +53,10 @@ func (c *client) read() {
 func (c *client) write() {
 	defer c.socket.Close()
 	for msg := range c.send {
-		err := c.socket.WriteMessage(websocket.TextMessage, msg)
+		// err := c.socket.WriteMessage(websocket.TextMessage, msg)
+
+		// ch2: json 형식으로 변경
+		err := c.socket.WriteJSON(msg)
 		if err != nil {
 			return
 		}

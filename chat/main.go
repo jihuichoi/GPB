@@ -2,6 +2,11 @@ package main
 
 import (
 	"flag"
+	"github.com/stretchr/gomniauth"
+	"github.com/stretchr/gomniauth/providers/facebook"
+	"github.com/stretchr/gomniauth/providers/github"
+	"github.com/stretchr/gomniauth/providers/google"
+	"github.com/stretchr/objx"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -25,20 +30,42 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
 
+	// ch2: Oauth2 를 통해 provider 로 부터 받아 쿠키에 저장한 사용자 정보를 불러온다.
+	data := map[string]interface{}{
+		"Host": r.Host,
+	}
+	if authCookie, err := r.Cookie("auth"); err == nil {
+		data["UserData"] = objx.MustFromBase64(authCookie.Value)
+	}
+
 	// 템플릿에 request 정보를 전달
 	// 자바스크립트 부분에서 {{.Host}} 라는 형식으로 사용할 수 있음
-	t.templ.Execute(w, r)
+	// t.templ.Execute(w, r)
 	// t.templ.Execute(w, nil)
+
+	// ch2: request 을 직접 전달하지 않고, map 을 만들어서 전달
+	// 템플릿에서 사용자 정보를 표시하기 위해
+	t.templ.Execute(w, data)
 }
 
 func main() {
-	// bootstrap 등 static html 부분을 위한 항목
-	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./assets/"))))
 
 	// 채팅 사이트 주소가 하드코딩됨 (localhost:8080)
 	// 이를 커맨드라인에서 -addr 라는 플래그로 처리하도록 경 ./chat -addr=":3000" 이라는 형식으로 실행이 가능해짐
 	var addr = flag.String("host", ":8080", "The addr of the application")
 	flag.Parse() // parse the flags
+
+	// Oauth2
+	// setup gomniauth
+	gomniauth.SetSecurityKey("PUT YOUR AUTH KEY HERE")
+	gomniauth.WithProviders(
+		facebook.New("233530930663961", "c4dc9bf4d7dcc93c8d70f53610470a4d",
+			"http://localhost:8080/auth/callback/facebook"),
+		github.New("4530f6f362f4798105a3", "60433e0e932ccb55cc36df5f0b8962476d4f6473",
+			"http://localhost:8080/auth/callback/github"),
+		google.New("767497021571-q4l7entsul2qhjd4fmvt5it0cppe9n0m.apps.googleusercontent.com", "Ow8ry0I_rz6UHtHQIr3ZT6ol",
+			"http://localhost:8080/auth/callback/google"),
+	)
 
 	// newRoom 함수로 새 룸을 만든다.
 	r := newRoom()
@@ -67,6 +94,9 @@ func main() {
 	// http.Handle 은 Handler 인터페이스를 사용하기 위한 함수. 즉, Handle 이 Handler 인터페이스를 만족하는 struct 를 인수값으로 받아서........
 	// 뭐래..
 	// http.Handle("/", &templateHandler{filename: "chat.html"})
+
+	// bootstrap 등 static html 부분을 위한 항목
+	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./assets/"))))
 
 	// ch2: 주소를 chat 으로 바꾸고, 인증을 위해 MustAuth로 감싼다. 이러면 templateHanlder 는 인증이 되어야만 동작한다.
 	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"})) // MustAuth 를 통과하지 못하면, /login 으로 이동한다.

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gorilla/websocket"
 	"github.com/jihuichoi/GPB/trace"
+	"github.com/stretchr/objx"
 	"log"
 	"net/http"
 )
@@ -10,7 +11,8 @@ import (
 type room struct {
 	// forward is a channel that holds incoming messages
 	// that should be forwarded to the other clients.
-	forward chan []byte
+	// forward chan []byte
+	forward chan *message
 
 	// join is a channel for clients wishing to join the room.
 	join chan *client
@@ -38,7 +40,8 @@ func (r *room) run() {
 			close(client.send)
 			r.tracer.Trace("Client left")
 		case msg := <-r.forward: // forward 채널에 메세지가 들어오면
-			r.tracer.Trace("Message received: ", string(msg))
+			// r.tracer.Trace("Message received: ", string(msg))
+			r.tracer.Trace("Message received: ", msg.Message)
 			// forward message to all clients
 			for client := range r.clients {
 				client.send <- msg // 각 클라이언트의 send 채널로 메세지 전달
@@ -62,11 +65,20 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.Fatal("ServeHTTP:", err)
 		return
 	}
+	// ch2: auth
+	authCookie, err := req.Cookie("auth")
+	if err != nil {
+		log.Fatal("Failed to get auth cookie:", err)
+		return
+	}
+
 	// 클라이언트와 소켓 연결 생성
 	client := &client{
 		socket: socket,
-		send:   make(chan []byte, messageBufferSize),
-		room:   r,
+		// send:   make(chan []byte, messageBufferSize),
+		send:     make(chan *message, messageBufferSize),
+		room:     r,
+		userData: objx.MustFromBase64(authCookie.Value),
 	}
 	r.join <- client                     // room 입장을 위해 join 채널에 클라이언트를 전달
 	defer func() { r.leave <- client }() // 웹소켓 종료시 클라이언트가 룸에서 떠남을 기록
@@ -76,7 +88,8 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func newRoom() *room {
 	return &room{
-		forward: make(chan []byte),
+		// forward: make(chan []byte),
+		forward: make(chan *message),
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
