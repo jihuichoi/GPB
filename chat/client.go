@@ -21,6 +21,7 @@ type client struct {
 	room *room
 
 	// userData holds information about the user
+	// from room.go userData: objx.MustFromBase64(authCookie.Value),
 	userData map[string]interface{}
 }
 
@@ -43,6 +44,10 @@ func (c *client) read() {
 		}
 		msg.When = time.Now()
 		msg.Name = c.userData["name"].(string)
+		// c.userData["avatar_url"] 이 nil 일 경우 string type 에 대입하면 panic 이 발생하므로 미리 확인해준다.
+		if avatarURL, ok := c.userData["avatar_url"]; ok {
+			msg.AvatarURL = avatarURL.(string)
+		}
 		c.room.forward <- msg
 	}
 }

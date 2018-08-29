@@ -104,6 +104,18 @@ func main() {
 	http.HandleFunc("/auth/", loginHandler)
 	http.Handle("/room", r) // QST: 이 부분은 도대체 무엇을 하나?
 
+	// ch3: logout. auth.go 에서 SetCookie 로 저장한 쿠키를 초기화한다.
+	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+		http.SetCookie(w, &http.Cookie{
+			Name:   "auth",
+			Value:  "",
+			Path:   "/",
+			MaxAge: -1,
+		})
+		w.Header().Set("Location", "/chat")
+		w.WriteHeader(http.StatusTemporaryRedirect)
+	})
+
 	// get the room going
 	// 룸을 실행. 무한 루프를 돌면서 상에 따라 select 구문을 실행함
 	go r.run()

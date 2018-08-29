@@ -14,14 +14,27 @@ type authHandler struct {
 
 func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// ch2: 쿠키값을 확인하고 값이 없으면, 지정한 페이지로 리다이렉트한다.
-	_, err := r.Cookie("auth") // 쿠키값을 가져오지 않고, 쿠키가 있는지 여부만 검사한다.
-	if err == http.ErrNoCookie {
+	// _, err := r.Cookie("auth") // 쿠키값을 가져오지 않고, 쿠키가 있는지 여부만 검사한다.
+	// if err == http.ErrNoCookie {
+	// 	// not authenticated
+	// 	w.Header().Set("Location", "/login")
+	// 	w.WriteHeader(http.StatusTemporaryRedirect)
+	// 	return
+	// }
+
+	// if err != nil {
+	// 	// some other error
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// ch3: 빈 쿠키값 대비
+	if cookie, err := r.Cookie("auth"); err == http.ErrNoCookie || cookie.Value == "" {
 		// not authenticated
 		w.Header().Set("Location", "/login")
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
-	}
-	if err != nil {
+	} else if err != nil {
 		// some other error
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -75,7 +88,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		authCookieValue := objx.New(map[string]interface{}{
-			"name": user.Name(),
+			"name":       user.Name(),
+			"avatar_url": user.AvatarURL(),
 		}).MustBase64()
 		http.SetCookie(w, &http.Cookie{
 			Name:  "auth",
