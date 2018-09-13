@@ -2,16 +2,17 @@ package main
 
 import (
 	"flag"
-	"github.com/stretchr/gomniauth"
-	"github.com/stretchr/gomniauth/providers/facebook"
-	"github.com/stretchr/gomniauth/providers/github"
-	"github.com/stretchr/gomniauth/providers/google"
-	"github.com/stretchr/objx"
 	"log"
 	"net/http"
 	"path/filepath"
 	"sync"
 	"text/template"
+
+	"github.com/stretchr/gomniauth"
+	"github.com/stretchr/gomniauth/providers/facebook"
+	"github.com/stretchr/gomniauth/providers/github"
+	"github.com/stretchr/gomniauth/providers/google"
+	"github.com/stretchr/objx"
 )
 
 // teml represents a single template
@@ -68,7 +69,9 @@ func main() {
 	)
 
 	// newRoom 함수로 새 룸을 만든다.
-	r := newRoom()
+	r := newRoom(UseGravatar)
+	// r := newRoom(UseAuthAvatar)
+	// r := newRoom()
 	// tracer 출력을 stdout 으로 내보냄
 	// r.tracer = trace.New(os.Stdout)
 

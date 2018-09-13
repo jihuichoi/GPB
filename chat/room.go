@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/gorilla/websocket"
 	"github.com/jihuichoi/GPB/trace"
 	"github.com/stretchr/objx"
-	"log"
-	"net/http"
 )
 
 type room struct {
@@ -25,6 +26,9 @@ type room struct {
 
 	// test 를 위한 tracer
 	tracer trace.Tracer
+
+	// avatar is how avatar information will be obtained.
+	avatar Avatar
 }
 
 func (r *room) run() {
@@ -86,7 +90,7 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	client.read()                        // 클라이언트의 입력을 기다림
 }
 
-func newRoom() *room {
+func newRoom(avatar Avatar) *room {
 	return &room{
 		// forward: make(chan []byte),
 		forward: make(chan *message),
@@ -94,5 +98,6 @@ func newRoom() *room {
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
 		tracer:  trace.Off(),
+		avatar:  avatar,
 	}
 }

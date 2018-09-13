@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/gorilla/websocket"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 type client struct {
@@ -38,16 +39,20 @@ func (c *client) read() {
 
 		// ch2: json 으로 변경
 		var msg *message
-		err := c.socket.ReadJSON(&msg)
-		if err != nil {
+		// err := c.socket.ReadJSON(&msg)
+		// if err != nil {
+		// 	return
+		// }
+		if err := c.socket.ReadJSON(&msg); err != nil {
 			return
 		}
 		msg.When = time.Now()
 		msg.Name = c.userData["name"].(string)
+		msg.AvatarURL, _ = c.room.avatar.GetAvatarURL(c)
 		// c.userData["avatar_url"] 이 nil 일 경우 string type 에 대입하면 panic 이 발생하므로 미리 확인해준다.
-		if avatarURL, ok := c.userData["avatar_url"]; ok {
-			msg.AvatarURL = avatarURL.(string)
-		}
+		// if avatarURL, ok := c.userData["avatar_url"]; ok {
+		// 	msg.AvatarURL = avatarURL.(string)
+		// }
 		c.room.forward <- msg
 	}
 }
