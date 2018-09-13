@@ -105,7 +105,10 @@ func main() {
 	http.Handle("/chat", MustAuth(&templateHandler{filename: "chat.html"})) // MustAuth 를 통과하지 못하면, /login 으로 이동한다.
 	http.Handle("/login", &templateHandler{filename: "login.html"})
 	http.HandleFunc("/auth/", loginHandler)
-	http.Handle("/room", r) // QST: 이 부분은 도대체 무엇을 하나?
+	http.Handle("/room", r)                                           // 새 룸을 개설
+	http.Handle("/upload", &templateHandler{filename: "upload.html"}) // 아바타 사진 업로드
+	http.HandleFunc("/uploader", uploaderHandler)
+	http.Handle("/avatars/", http.StripPrefix("/avatars/", http.FileServer(http.Dir("./avatars"))))
 
 	// ch3: logout. auth.go 에서 SetCookie 로 저장한 쿠키를 초기화한다.
 	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
