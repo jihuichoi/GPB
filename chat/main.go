@@ -69,7 +69,8 @@ func main() {
 	)
 
 	// newRoom 함수로 새 룸을 만든다.
-	r := newRoom(UseGravatar)
+	r := newRoom(UseFileSystemAvatar)
+	// r := newRoom(UseGravatar)
 	// r := newRoom(UseAuthAvatar)
 	// r := newRoom()
 	// tracer 출력을 stdout 으로 내보냄
