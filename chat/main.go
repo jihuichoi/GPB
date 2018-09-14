@@ -16,7 +16,12 @@ import (
 )
 
 // set the active Avatar imlemetation
-var avatars Avatar = UseFileSystemAvatar
+// var avatars Avatar =
+var avatars Avatar = TryAvatars{
+	UseFileSystemAvatar,
+	UseAuthAvatar,
+	UseGravatar,
+}
 
 // teml represents a single template
 type templateHandler struct {
