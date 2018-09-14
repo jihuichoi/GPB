@@ -15,6 +15,9 @@ import (
 	"github.com/stretchr/objx"
 )
 
+// set the active Avatar imlemetation
+var avatars Avatar = UseFileSystemAvatar
+
 // teml represents a single template
 type templateHandler struct {
 	once     sync.Once
@@ -69,10 +72,10 @@ func main() {
 	)
 
 	// newRoom 함수로 새 룸을 만든다.
-	r := newRoom(UseFileSystemAvatar)
+	// r := newRoom(UseFileSystemAvatar)
 	// r := newRoom(UseGravatar)
 	// r := newRoom(UseAuthAvatar)
-	// r := newRoom()
+	r := newRoom()
 	// tracer 출력을 stdout 으로 내보냄
 	// r.tracer = trace.New(os.Stdout)
 

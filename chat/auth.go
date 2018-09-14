@@ -4,18 +4,20 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
 	"github.com/stretchr/gomniauth"
-	gomniauthcommon "github.com/stretchr/gomniauth/common"
 	"github.com/stretchr/objx"
+
+	gomniauthcommon "github.com/stretchr/gomniauth/common"
 )
 
 // ChatUser is ...
 type ChatUser interface {
 	UniqueID() string
-	AvatarUrl() string
+	AvatarURL() string
 }
 
 type chatUser struct {
@@ -103,18 +105,26 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		user, err := provider.GetUser(creds)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Error when trying to get user from %s: %s", provider, err), http.StatusInternalServerError)
-			return
+			log.Fatalln("Error when trying to get user from", provider, "-", err)
+			// http.Error(w, fmt.Sprintf("Error when trying to get user from %s: %s", provider, err), http.StatusInternalServerError)
+			// return
 		}
-
+		chatUser := &chatUser{User: user}
 		m := md5.New()
 		io.WriteString(m, strings.ToLower(user.Email()))
-		userID := fmt.Sprintf("%x", m.Sum(nil))
+		chatUser.uniqueID = fmt.Sprintf("%x", m.Sum(nil))
+		avatarURL, err := avatars.GetAvatarURL(chatUser)
+		if err != nil {
+			log.Fatalln("Error when trying to GetAvatarURL", "-", err)
+		}
+		// userID := fmt.Sprintf("%x", m.Sum(nil))
 		authCookieValue := objx.New(map[string]interface{}{
-			"userid":     userID,
-			"name":       user.Name(),
-			"avatar_url": user.AvatarURL(),
-			"email":      user.Email(),
+			// "userid":     userID,
+			"userid": chatUser.uniqueID,
+			"name":   user.Name(),
+			// "avatar_url": user.AvatarURL(),
+			"avatar_url": avatarURL,
+			// "email":      user.Email(),
 		}).MustBase64()
 		http.SetCookie(w, &http.Cookie{
 			Name:  "auth",

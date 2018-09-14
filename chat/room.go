@@ -90,7 +90,7 @@ func (r *room) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	client.read()                        // 클라이언트의 입력을 기다림
 }
 
-func newRoom(avatar Avatar) *room {
+func newRoom() *room {
 	return &room{
 		// forward: make(chan []byte),
 		forward: make(chan *message),
@@ -98,6 +98,6 @@ func newRoom(avatar Avatar) *room {
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
 		tracer:  trace.Off(),
-		avatar:  avatar,
+		// avatar:  avatar,
 	}
 }

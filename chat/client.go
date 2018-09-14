@@ -48,7 +48,10 @@ func (c *client) read() {
 		}
 		msg.When = time.Now()
 		msg.Name = c.userData["name"].(string)
-		msg.AvatarURL, _ = c.room.avatar.GetAvatarURL(c)
+		if avatarURL, ok := c.userData["avatar_url"]; ok {
+			msg.AvatarURL = avatarURL.(string)
+		}
+		// msg.AvatarURL, _ = c.room.avatar.GetAvatarURL(c)
 		// c.userData["avatar_url"] 이 nil 일 경우 string type 에 대입하면 panic 이 발생하므로 미리 확인해준다.
 		// if avatarURL, ok := c.userData["avatar_url"]; ok {
 		// 	msg.AvatarURL = avatarURL.(string)
